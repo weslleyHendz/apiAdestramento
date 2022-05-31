@@ -19,20 +19,38 @@ $id = intval($_GET['id'] ?? '');
 // Get all or a single user from database
 if ($api == 'GET') {
     if ($id != null) {
-        $data = $user->fetch($id);
+        $data = $user->getUser($id);
     } else {
-        $data = $user->fetch();
+        $data = $user->getUser();
     }
     echo json_encode($data);
 }
 
 // Add a new user into database
 if ($api == 'POST') {
-    $name = $user->test_input($_POST['name']);
-    $email = $user->test_input($_POST['email']);
-    $phone = $user->test_input($_POST['phone']);
-
-    if ($user->insert($name, $email, $phone)) {
+    parse_str(file_get_contents('php://input'), $post_input);
+    
+    if(isset($post_input['name'])){
+        $name = $user->test_input($post_input['name']);
+    }else{
+        $name = '';
+    }
+    if(isset($post_input['email'])){
+        $email = $user->test_input($post_input['email']);
+    }else{
+        $email = '';
+    }
+    if(isset($post_input['phone'])){
+        $phone = $user->test_input($post_input['phone']);
+    }else{
+        $phone = '';
+    }
+    if(isset($post_input['age'])){
+        $age = $user->test_input($post_input['age']);
+    }else{
+        $age = '';
+    }
+    if ($user->insertUser($name, $email, $phone, $age)) {
         echo $user->message('User added successfully!', false);
     } else {
         echo $user->message('Failed to add an user!', true);
@@ -41,14 +59,33 @@ if ($api == 'POST') {
 
 // Update an user in database
 if ($api == 'PUT') {
-    parse_str(file_get_contents('php://input'), $post_input);
 
-    $name = $user->test_input($post_input['name']);
-    $email = $user->test_input($post_input['email']);
-    $phone = $user->test_input($post_input['phone']);
+    parse_str(file_get_contents('php://input'), $post_input);
+    $data = $user->getUser($id);
+
+    if(isset($post_input['name'])){
+        $name = $user->test_input($post_input['name']);
+    }else{
+        $name = $data[0]['name'];
+    }
+    if(isset($post_input['email'])){
+        $email = $user->test_input($post_input['email']);
+    }else{
+        $email = $data[0]['email'];
+    }
+    if(isset($post_input['phone'])){
+        $phone = $user->test_input($post_input['phone']);
+    }else{
+        $phone = $data[0]['phone'];
+    }
+    if(isset($post_input['age'])){
+        $age = $user->test_input($post_input['age']);
+    }else{
+        $age = $data[0]['age'];
+    }
 
     if ($id != null) {
-        if ($user->update($name, $email, $phone, $id)) {
+        if ($user->updateUser($name, $email, $phone, $age, $id)) {
             echo $user->message('User updated successfully!', false);
         } else {
             echo $user->message('Failed to update an user!', true);
@@ -61,7 +98,7 @@ if ($api == 'PUT') {
 // Delete an user from database
 if ($api == 'DELETE') {
     if ($id != null) {
-        if ($user->delete($id)) {
+        if ($user->deleteUser($id)) {
             echo $user->message('User deleted successfully!', false);
         } else {
             echo $user->message('Failed to delete an user!', true);
